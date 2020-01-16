@@ -1,6 +1,7 @@
 package mongodb_sql_driver
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -36,6 +37,13 @@ func Parse(dsn string) (*Config, error) {
 	if err = parsePrams(cfg, map[string][]string(u.Query())); err != nil {
 		return nil, err
 	}
+
+	if ps, ok := u.User.Password(); ok {
+		cfg.MongoDSN = fmt.Sprintf("%s://%s:%s@%s%s?%s", u.Scheme, u.User.Username(), ps, u.Host, u.Path, u.RawQuery)
+	} else {
+		return nil, fmt.Errorf("password not set")
+	}
+
 	return cfg, nil
 }
 
@@ -53,8 +61,6 @@ func parsePrams(cfg *Config, params map[string][]string) (err error) {
 			cfg.Location, err = time.LoadLocation(v[0])
 		case "debug":
 			cfg.Debug, err = strconv.ParseBool(v[0])
-		case "mongodsn":
-			cfg.MongoDSN = v[0]
 		default:
 			cfg.Params[k] = v[0]
 		}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"fmt"
+	"log"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -17,6 +18,18 @@ type mConnector struct {
 
 func newMConnector(cfg *Config, mongo *mongo.Client) *mConnector {
 	return &mConnector{mongo: mongo, cfg: cfg}
+}
+
+func (m *mConnector) log(v ...interface{}) {
+	if m.cfg.Debug {
+		log.Print(v)
+	}
+}
+
+func (m *mConnector) logf(f string, v ...interface{}) {
+	if m.cfg.Debug {
+		log.Printf(f, v)
+	}
 }
 
 func (m *mConnector) Ping(ctx context.Context) error {
@@ -52,5 +65,6 @@ func (m *mConnector) Rollback() error {
 }
 
 func (m *mConnector) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
+	m.log(query)
 	return nil, fmt.Errorf("begin queryContext not implemented")
 }
